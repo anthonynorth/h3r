@@ -117,7 +117,7 @@ h3_hex_range <- function(h, k) {
 
 }
 
-h3_k_ring <- funtion(h, k) {
+h3_k_ring <- function(h, k) {
 
 }
 
