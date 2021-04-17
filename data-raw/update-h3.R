@@ -1,7 +1,7 @@
 
 library(tidyverse)
 
-# download GEOS
+# download sources
 source_url <- "https://github.com/uber/h3/archive/refs/tags/v3.7.1.tar.gz"
 curl::curl_download(source_url, "data-raw/h3-source.tar.gz")
 untar("data-raw/h3-source.tar.gz", exdir = "data-raw")
@@ -49,4 +49,4 @@ stopifnot(
 )
 
 #' Reminders about manual modifications that are needed
-#' - Update exported C API using update-libh3-api.R
+#' - Remove brackets around <faceijk.h> in h3Index.c
