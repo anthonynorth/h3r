@@ -1,0 +1,34 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# h3r
+
+<!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/paleolimbot/h3r/workflows/R-CMD-check/badge.svg)](https://github.com/paleolimbot/h3r/actions)
+<!-- badges: end -->
+
+The goal of h3r is to provide cross-platform R bindings to the [H3
+library](https://github.com/uber/h3) without system dependencies.
+
+## Installation
+
+You can install the development version from
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("paleolimbot/h3r")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+``` r
+library(h3r)
+h3_version()
+#> [1] '3.7.1'
+```
