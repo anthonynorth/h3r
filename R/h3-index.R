@@ -87,7 +87,7 @@ h3_edge_destination <- function(h) {
 
 }
 
-# accordion operators
+# accordion operators (make more set with h3_set)
 
 h3_children <- function(h, child_res) {
 
