@@ -119,8 +119,8 @@ int h3_point_writer_coord(const wk_meta_t* meta, const double* coord, uint32_t c
     }
 
     GeoCoord g;
-    g.lon = coord[0];
-    g.lat = coord[1];
+    g.lon = coord[0] * PI / 180.0;
+    g.lat = coord[1] * PI / 180.0;
     data->h3[data->feat_id - 1] = geoToH3(&g, data->res);
 
     return WK_CONTINUE;
