@@ -22,21 +22,19 @@ static inline SEXP h3_point_writer_alloc_result(R_xlen_t size) {
 
 static inline SEXP h3_point_writer_realloc_result(SEXP result, R_xlen_t new_size) {
     SEXP new_result = PROTECT(h3_point_writer_alloc_result(new_size));
-
+    
     R_xlen_t size_cpy;
-    if (Rf_xlength(VECTOR_ELT(result, 0)) < new_size) {
-        size_cpy = Rf_xlength(VECTOR_ELT(result, 0));
+    if (Rf_xlength(result) < new_size) {
+        size_cpy = Rf_xlength(result);
     } else {
         size_cpy = new_size;
     }
 
-    for (int i = 0; i < 4; i ++) {
-        memcpy(
-            REAL(VECTOR_ELT(new_result, i)), 
-            REAL(VECTOR_ELT(result, i)), 
-            sizeof(double) * size_cpy
-        );
-    }
+    memcpy(
+        REAL(new_result), 
+        REAL(result), 
+        sizeof(double) * size_cpy
+    );
 
     UNPROTECT(1);
     return new_result;
