@@ -1,5 +1,5 @@
 
-#' wk package compatability
+#' wk package compatibility
 #'
 #' @param res An index resolution between 0 (large hexagons)
 #'   and 15 (small hexagons).

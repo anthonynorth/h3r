@@ -2,7 +2,7 @@
 % Please edit documentation in R/compat-wk.R
 \name{h3_index_point_writer}
 \alias{h3_index_point_writer}
-\title{wk package compatability}
+\title{wk package compatibility}
 \usage{
 h3_index_point_writer(res)
 }
@@ -16,7 +16,7 @@ and 15 (small hexagons).}
 }
 }
 \description{
-wk package compatability
+wk package compatibility
 }
 \examples{
 wk::wk_handle(wk::xy(0, 0), h3_index_point_writer(7))
