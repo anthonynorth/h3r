@@ -1,5 +1,5 @@
 
-#' wk package compatibility
+#' wk handlers
 #'
 #' @param res An index resolution between 0 (large hexagons)
 #'   and 15 (small hexagons).
@@ -24,6 +24,20 @@ h3_index_point_writer <- function(res) {
 #' @export
 h3_set_writer <- function(res) {
   stop("Not implemented")
+}
+
+#' Import H3 Index/Set objects from geometry
+#'
+#' @param x A foreign object
+#' @param ... Unused
+#' @inheritParams h3_index_point_writer
+#'
+#' @rdname h3-import
+#' @return An [h3_index()] or [h3_set()]
+#' @export
+#'
+as_h3_index.wk_xy <- function(x, ..., res) {
+  wk::wk_handle(x, h3_index_point_writer(res))
 }
 
 #' Export H3 Index/Set objects to geometry

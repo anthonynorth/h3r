@@ -2,6 +2,7 @@
 #' Create H3 Index vectors
 #'
 #' @param x The canonical H3 identifier as a character vector.
+#' @param ... Passed to methods
 #'
 #' @return A vctr of class h3_index
 #' @export
@@ -12,6 +13,18 @@
 h3_index <- function(x) {
   vec_assert(x, character())
   new_h3_index(.Call(h3r_c_string_to_h3, x))
+}
+
+#' @rdname h3_index
+#' @export
+as_h3_index <- function(x, ...) {
+  UseMethod("as_h3_index")
+}
+
+#' @rdname h3_index
+#' @export
+as_h3_index.character <- function(x, ...) {
+  h3_index(x)
 }
 
 # keep private for now

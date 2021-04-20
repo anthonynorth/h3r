@@ -3,7 +3,7 @@
 \name{h3_index_point_writer}
 \alias{h3_index_point_writer}
 \alias{h3_set_writer}
-\title{wk package compatibility}
+\title{wk handlers}
 \usage{
 h3_index_point_writer(res)
 
@@ -19,7 +19,7 @@ and 15 (small hexagons).}
 }
 }
 \description{
-wk package compatibility
+wk handlers
 }
 \examples{
 wk::wk_handle(wk::xy(0, 0), h3_index_point_writer(7))

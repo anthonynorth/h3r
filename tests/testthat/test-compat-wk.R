@@ -40,3 +40,10 @@ test_that("h3_index_point_writer() works", {
     hex7
   )
 })
+
+test_that("import methods work", {
+  expect_identical(
+    as_h3_index(wk::xy(0, 0), res = 7),
+    h3_index("87754e64dffffff")
+  )
+})

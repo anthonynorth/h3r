@@ -2,12 +2,20 @@
 % Please edit documentation in R/h3-index.R
 \name{h3_index}
 \alias{h3_index}
+\alias{as_h3_index}
+\alias{as_h3_index.character}
 \title{Create H3 Index vectors}
 \usage{
 h3_index(x)
+
+as_h3_index(x, ...)
+
+\method{as_h3_index}{character}(x, ...)
 }
 \arguments{
 \item{x}{The canonical H3 identifier as a character vector.}
+
+\item{...}{Passed to methods}
 }
 \value{
 A vctr of class h3_index
