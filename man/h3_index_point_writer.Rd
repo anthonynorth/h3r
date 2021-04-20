@@ -2,9 +2,12 @@
 % Please edit documentation in R/compat-wk.R
 \name{h3_index_point_writer}
 \alias{h3_index_point_writer}
+\alias{h3_set_writer}
 \title{wk package compatibility}
 \usage{
 h3_index_point_writer(res)
+
+h3_set_writer(res)
 }
 \arguments{
 \item{res}{An index resolution between 0 (large hexagons)
