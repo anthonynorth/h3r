@@ -19,7 +19,7 @@ SEXP h3r_c_string_to_h3(SEXP h3_string) {
         if (item == NA_STRING) {
             result_dbl[i] = NA_REAL;
         } else {
-            h3[i] = stringToH3(CHAR(item));
+            stringToH3(CHAR(item), &h3[i]);
         }
     }
 

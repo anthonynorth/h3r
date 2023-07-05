@@ -22,7 +22,7 @@ static inline SEXP h3_point_writer_alloc_result(R_xlen_t size) {
 
 static inline SEXP h3_point_writer_realloc_result(SEXP result, R_xlen_t new_size) {
     SEXP new_result = PROTECT(h3_point_writer_alloc_result(new_size));
-    
+
     R_xlen_t size_cpy;
     if (Rf_xlength(result) < new_size) {
         size_cpy = Rf_xlength(result);
@@ -31,8 +31,8 @@ static inline SEXP h3_point_writer_realloc_result(SEXP result, R_xlen_t new_size
     }
 
     memcpy(
-        REAL(new_result), 
-        REAL(result), 
+        REAL(new_result),
+        REAL(result),
         sizeof(double) * size_cpy
     );
 
@@ -118,10 +118,8 @@ int h3_point_writer_coord(const wk_meta_t* meta, const double* coord, uint32_t c
         data->has_coord = 1;
     }
 
-    GeoCoord g;
-    g.lon = coord[0] * PI / 180.0;
-    g.lat = coord[1] * PI / 180.0;
-    data->h3[data->feat_id - 1] = geoToH3(&g, data->res);
+    LatLng latlng = {.lng = degsToRads(coord[0]), .lat = degsToRads(coord[1]) };
+    latLngToCell(&latlng, data->res, &data->h3[data->feat_id - 1]);
 
     return WK_CONTINUE;
 }

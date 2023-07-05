@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Uber Technologies, Inc.
+ * Copyright 2022 Uber Technologies, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/** @file  h3UniEdge.h
- *  @brief H3UniEdge functions for manipulating unidirectional edge indexes.
+/** @file h3Assert.c
+ * @brief   Support code for unit testing
  */
 
-#ifndef H3UNIEDGE_H
-#define H3UNIEDGE_H
+#include "h3Assert.h"
 
-#include "algos.h"
-#include "h3Index.h"
-
-// nothing non-public in this file
-
+#if defined(H3_COVERAGE_TEST) || defined(H3_DEBUG)
+/*
+** Counter used for coverage testing.  Does not come into play for
+** release builds.
+**
+** Access to this global variable is not mutex protected.  This might
+** result in TSAN warnings.  But as the variable does not exist in
+** release builds, that should not be a concern.
+*/
+unsigned int h3CoverageCounter;
 #endif
