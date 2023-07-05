@@ -11,13 +11,18 @@ Provides bindings for the 'H3' hexagonal index library.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/paleolimbot/h3r}
-  \item Report bugs at \url{https://github.com/paleolimbot/h3r/issues}
+  \item \url{https://github.com/anthonynorth/h3r}
+  \item Report bugs at \url{https://github.com/anthonynorth/h3r/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Dewey Dunnington \email{dewey@fishandwhistle.net} (\href{https://orcid.org/0000-0002-9415-4582}{ORCID})
+\strong{Maintainer}: Anthony North \email{anthony.jl.north@gmail.com}
+
+Authors:
+\itemize{
+  \item Dewey Dunnington \email{dewey@fishandwhistle.net} (\href{https://orcid.org/0000-0002-9415-4582}{ORCID})
+}
 
 }
 \keyword{internal}

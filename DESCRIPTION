@@ -1,28 +1,27 @@
 Package: h3r
 Title: Bindings for the 'H3' Index System
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "Dewey",
-           family = "Dunnington",
-           role = c("aut", "cre"),
-           email = "dewey@fishandwhistle.net",
-           comment = c(ORCID = "0000-0002-9415-4582"))
+Authors@R: c(
+    person("Dewey", "Dunnington", email = "dewey@fishandwhistle.net", role = "aut",
+           comment = c(ORCID = "0000-0002-9415-4582")),
+    person("Anthony", "North", email = "anthony.jl.north@gmail.com", role = c("aut", "cre"))
+  )
 Description: Provides bindings for the 'H3' hexagonal index library.
 License: Apache License (>= 2)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
-Suggests: 
+RoxygenNote: 7.2.3
+Suggests:
     testthat (>= 3.0.0),
     sf,
     s2,
     geos
 Config/testthat/edition: 3
-URL: https://github.com/paleolimbot/h3r
-BugReports: https://github.com/paleolimbot/h3r/issues
+URL: https://github.com/anthonynorth/h3r
+BugReports: https://github.com/anthonynorth/h3r/issues
 LinkingTo:
     wk
-Imports: 
+Imports:
     vctrs,
     wk
