@@ -1,0 +1,2 @@
+SOURCES=$(wildcard *.c h3/*.c)
+OBJECTS=$(SOURCES:.c=.o)

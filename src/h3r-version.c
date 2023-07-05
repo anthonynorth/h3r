@@ -2,7 +2,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <stdio.h>
-#include "h3api.h"
+#include "h3/h3api.h"
 
 SEXP h3r_c_h3_version() {
     SEXP out = PROTECT(Rf_allocVector(STRSXP, 1));

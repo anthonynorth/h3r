@@ -2,7 +2,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include "wk-v1.h"
-#include "h3api.h"
+#include "h3/h3api.h"
 #include <stdlib.h>
 #include <memory.h>
 

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "h3api.h"
+#include "h3/h3api.h"
 
 SEXP h3r_c_string_to_h3(SEXP h3_string) {
     R_xlen_t size = Rf_xlength(h3_string);
