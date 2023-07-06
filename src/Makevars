@@ -1,2 +1,8 @@
-SOURCES=$(wildcard *.c h3/*.c)
-OBJECTS=$(SOURCES:.c=.o)
+C_SOURCES=$(wildcard *.c h3/*.c)
+CPP_SOURCES=$(wildcard *.cpp)
+OBJECTS=$(C_SOURCES:.c=.o) $(CPP_SOURCES:.cpp=.o)
+
+all: $(SHLIB)
+
+clean:
+	rm -f $(SHLIB) $(OBJECTS)
