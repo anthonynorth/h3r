@@ -9,5 +9,5 @@
 #' h3_version()
 #'
 h3_version <- function() {
-  package_version(.Call(h3r_c_h3_version))
+  package_version(.Call(ffi_h3_version))
 }
