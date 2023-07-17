@@ -17,23 +17,24 @@ H3Index string_to_h3(const char* str) {
   return h3_index;
 }
 
-uint32_t h3_to_string(H3Index h, char* str, size_t sz) {
+int h3_to_string(H3Index h3_index, char* str, size_t sz) {
   if (sz < 17)
     throw std::length_error(std::string("str size must be >= 17"));
 
   constexpr char hex[17] = "0123456789abcdef";
+  int out_sz = 16;
 
-  uint32_t out_sz = 0;
-  for (uint32_t i = 0, nib = 60; i < 16; ++i, nib -= 4) {
+  // leading 0s are dropped
+  for (int offset = 60; (offset >= 0) && (h3_index >> offset) == 0; offset -= 4) {
+    --out_sz;
+  }
+  
+  // write in reverse
+  for (int i = out_sz - 1; i >= 0; --i, h3_index >>= 4) {
     // value of each nibble as index to hex
-    uint32_t c = (h >> nib) & 0xf;
-    str[out_sz] = hex[c];
-
-    // drop 0-leading
-    out_sz += ((out_sz != 0) | (c != 0));
+    str[i] = hex[h3_index & 0xf];
   }
 
-  // empty string if 0
-  str[out_sz] = '\0';
+  str[out_sz + 1] = '\0';
   return out_sz;
 }
