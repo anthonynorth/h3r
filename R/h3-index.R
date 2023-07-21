@@ -12,7 +12,7 @@
 #'
 h3_index <- function(x) {
   vec_assert(x, character())
-  new_h3_index(.Call(h3r_c_string_to_h3, x))
+  new_h3_index(.Call(ffi_string_to_h3, x))
 }
 
 #' @rdname h3_index
@@ -35,7 +35,7 @@ new_h3_index <- function(x) {
 
 #' @export
 as.character.h3_index <- function(x, ...) {
-  .Call(h3r_c_h3_to_string, x)
+  .Call(ffi_h3_to_string, x)
 }
 
 #' @export

@@ -1,40 +1,32 @@
 #pragma once
 
+#include <array>
+#include <charconv>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 
-#include "h3/h3Index.h"
 #include "h3/h3api.h"
 
-H3Index string_to_h3(const char* str) {
-  char* end = nullptr;
-  errno = 0;
-  H3Index h3_index = strtoull(str, &end, 16);
+H3Index h3_from_str(std::string_view str) {
+  H3Index h3_index = H3_NULL;
+  if (str.empty()) return h3_index;
 
-  if (*end != '\0' || errno != 0)
-    throw std::invalid_argument(std::string(str) + " is not a valid h3_index");
+  auto [ptr, ec] = std::from_chars(str.begin(), str.end(), h3_index, 16);
+
+  if (ec != std::errc() || *ptr != '\0')
+    throw std::invalid_argument("'" + std::string(str) + "' is not a valid h3_index");
 
   return h3_index;
 }
 
-int h3_to_string(H3Index h3_index, char* str, size_t sz) {
-  if (sz < 17)
-    throw std::length_error(std::string("str size must be >= 17"));
+std::string_view h3_to_str(H3Index h3_index, std::array<char, 17>& str) {
+  if (h3_index == H3_NULL) return std::string_view();
 
-  constexpr char hex[17] = "0123456789abcdef";
-  int out_sz = 16;
+  auto [ptr, ec] = std::to_chars(str.begin(), str.end(), h3_index, 16);
 
-  // leading 0s are dropped
-  for (int offset = 60; (offset >= 0) && (h3_index >> offset) == 0; offset -= 4) {
-    --out_sz;
-  }
-  
-  // write in reverse
-  for (int i = out_sz - 1; i >= 0; --i, h3_index >>= 4) {
-    // value of each nibble as index to hex
-    str[i] = hex[h3_index & 0xf];
-  }
+  if (ec != std::errc()) 
+    throw std::invalid_argument(std::make_error_code(ec).message());
 
-  str[out_sz + 1] = '\0';
-  return out_sz;
+  return std::string_view(str.begin(), ptr - str.begin());
 }
