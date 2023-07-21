@@ -134,7 +134,10 @@ private:
     else if constexpr (std::is_same_v<double, t>)
       return REAL_ELT(data_, i);
     else if constexpr (std::is_same_v<std::string_view, t>)
-      return std::string_view(CHAR(STRING_ELT(data_, i)));
+      if (SEXP str = STRING_ELT(data_, i); str == NA_STRING)
+        return std::string_view();
+      else
+        return std::string_view(CHAR(str));
     else if constexpr (std::is_same_v<SEXP, t>)
       return VECTOR_ELT(data_, i);
     else
@@ -153,8 +156,11 @@ private:
     else if constexpr (std::is_same_v<double, t>)
       return SET_REAL_ELT(data_, i, value);
     else if constexpr (std::is_same_v<std::string_view, t>)
-      return SET_STRING_ELT(data_, i,
-                            Rf_mkCharLenCE(value.data(), value.size(), CE_BYTES));
+      if (value.data() == nullptr)
+        return SET_STRING_ELT(data_, i, NA_STRING);
+      else
+        return SET_STRING_ELT(data_, i,
+                              Rf_mkCharLenCE(value.data(), value.size(), CE_BYTES));
     else if constexpr (std::is_same_v<SEXP, t>)
       return SET_VECTOR_ELT(data_, i, value);
     else
