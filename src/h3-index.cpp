@@ -12,7 +12,7 @@
 extern "C" SEXP ffi_string_to_h3(SEXP strings_sxp) {
   return catch_unwind([&] {
     vctr_view<std::string_view> strings = strings_sxp;
-    vctr<uint64_t> h3_indexes(strings.size());
+    vctr<H3Index> h3_indexes(strings.size());
 
     std::transform(strings.begin(), strings.end(), h3_indexes.begin(), h3_from_str);
     return h3_indexes;
