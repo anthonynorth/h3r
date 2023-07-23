@@ -9,12 +9,14 @@
 /* .Call calls */
 extern SEXP ffi_h3_to_string(void *);
 extern SEXP ffi_h3_version(void);
+extern SEXP ffi_handle_cell(void *, void *);
 extern SEXP ffi_string_to_h3(void *);
 extern SEXP h3r_c_point_writer_new(void *);
 
 static const R_CallMethodDef CallEntries[] = {
     {"ffi_h3_to_string",       (DL_FUNC) &ffi_h3_to_string,       1},
     {"ffi_h3_version",         (DL_FUNC) &ffi_h3_version,         0},
+    {"ffi_handle_cell",        (DL_FUNC) &ffi_handle_cell,        2},
     {"ffi_string_to_h3",       (DL_FUNC) &ffi_string_to_h3,       1},
     {"h3r_c_point_writer_new", (DL_FUNC) &h3r_c_point_writer_new, 1},
     {NULL, NULL, 0}

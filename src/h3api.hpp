@@ -12,11 +12,11 @@
 
 const H3Index h3_null = bit_cast<H3Index>(NA_REAL);
 
-bool h3_is_null(H3Index h3_index) {
+inline bool h3_is_null(H3Index h3_index) {
   return h3_index == h3_null;
 }
 
-H3Index h3_from_str(std::string_view str) {
+inline H3Index h3_from_str(std::string_view str) {
   if (str.empty()) return h3_null;
 
   H3Index h3_index = h3_null;
@@ -28,7 +28,7 @@ H3Index h3_from_str(std::string_view str) {
   return h3_index;
 }
 
-std::string_view h3_to_str(H3Index h3_index, std::array<char, 17>& str) {
+inline std::string_view h3_to_str(H3Index h3_index, std::array<char, 17>& str) {
   if (h3_is_null(h3_index)) return std::string_view();
 
   auto [ptr, ec] = std::to_chars(str.begin(), str.end(), h3_index, 16);
