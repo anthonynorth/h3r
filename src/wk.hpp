@@ -1,11 +1,14 @@
 #pragma once
 
+#define R_NO_REMAP
+#include <Rinternals.h>
 #include <stdexcept>
+#include "r-safe.hpp"
 #include "wk-v1.h"
 
-#include "r-safe.hpp"
+namespace wk {
 
-enum Result {
+enum class Result {
   Continue = WK_CONTINUE,
   Abort = WK_ABORT,
   AbortFeature = WK_ABORT_FEATURE
@@ -15,36 +18,16 @@ enum Result {
 struct Handler {
   virtual ~Handler() {}
 
-  virtual void initialize(int* dirty) {
-    if (*dirty)
-      throw std::runtime_error("Can't re-use this wk_handler");
-
-    *dirty = true;
-  }
-
   virtual Result vector_start(const wk_vector_meta_t* meta) { return Result::Continue; }
-  virtual Result feature_start(const wk_vector_meta_t* meta, R_xlen_t feat_id) {
-    return Result::Continue;
-  }
+  virtual Result feature_start(const wk_vector_meta_t* meta) { return Result::Continue; }
   virtual Result null_feature() { return Result::Continue; }
-  virtual Result geometry_start(const wk_meta_t* meta, uint32_t part_id) {
-    return Result::Continue;
-  }
-  virtual Result ring_start(const wk_meta_t* meta, uint32_t size, uint32_t ring_id) {
-    return Result::Continue;
-  }
-  virtual Result coord(const wk_meta_t* meta, const double* coord, uint32_t coord_id) {
-    return Result::Continue;
-  }
-  virtual Result ring_end(const wk_meta_t* meta, uint32_t size, uint32_t ring_id) {
-    return Result::Continue;
-  }
-  virtual Result geometry_end(const wk_meta_t* meta, uint32_t part_id) { return Result::Continue; }
-  virtual Result feature_end(const wk_vector_meta_t* meta, R_xlen_t feat_id) {
-    return Result::Continue;
-  }
+  virtual Result geometry_start(const wk_meta_t* meta) { return Result::Continue; }
+  virtual Result ring_start(const wk_meta_t* meta, uint32_t size) { return Result::Continue; }
+  virtual Result coord(const wk_meta_t* meta, const double* coord) { return Result::Continue; }
+  virtual Result ring_end(const wk_meta_t* meta, uint32_t size) { return Result::Continue; }
+  virtual Result geometry_end(const wk_meta_t* meta) { return Result::Continue; }
+  virtual Result feature_end(const wk_vector_meta_t* meta) { return Result::Continue; }
   virtual SEXP vector_end(const wk_vector_meta_t* meta) { return R_NilValue; }
-  virtual void deinitialize() {}
 };
 
 // derived from wk/internals
@@ -54,7 +37,6 @@ struct HandlerFactory {
     wk_handler_t* handler = wk_handler_create();
     handler->handler_data = handler_data;
 
-    handler->initialize = &initialize;
     handler->vector_start = &vector_start;
     handler->vector_end = &vector_end;
 
@@ -70,8 +52,6 @@ struct HandlerFactory {
 
     handler->coord = &coord;
 
-    // handler->error = &wk_default_handler_error;
-    handler->deinitialize = &deinitialize;
     handler->finalizer = &finalizer;
 
     return handler;
@@ -91,11 +71,6 @@ private:
     }
   }
 
-  inline static void initialize(int* dirty, void* handler_data) noexcept {
-    HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    return catch_unwind([&] { return handler->initialize(dirty); });
-  }
-
   inline static int vector_start(const wk_vector_meta_t* meta, void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
     return catch_unwind([&] { return handler->vector_start(meta); });
@@ -104,7 +79,7 @@ private:
   inline static int feature_start(const wk_vector_meta_t* meta, R_xlen_t feat_id,
                                   void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    return catch_unwind([&] { return handler->feature_start(meta, feat_id); });
+    return catch_unwind([&] { return handler->feature_start(meta); });
   }
 
   inline static int null_feature(void* handler_data) noexcept {
@@ -112,50 +87,110 @@ private:
     return catch_unwind([&] { return handler->null_feature(); });
   }
 
-  inline static int geometry_start(const wk_meta_t* meta, uint32_t partId,
+  inline static int geometry_start(const wk_meta_t* meta, uint32_t part_id,
                                    void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    return catch_unwind([&] { return handler->geometry_start(meta, partId); });
+    return catch_unwind([&] { return handler->geometry_start(meta); });
   }
 
-  inline static int ring_start(const wk_meta_t* meta, uint32_t size, uint32_t ringId,
+  inline static int ring_start(const wk_meta_t* meta, uint32_t size, uint32_t ring_id,
                                void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    return catch_unwind([&] { return handler->ring_start(meta, size, ringId); });
+    return catch_unwind([&] { return handler->ring_start(meta, size); });
   }
 
-  inline static int coord(const wk_meta_t* meta, const double* coord, uint32_t coord_id,
-                          void* handler_data) noexcept {
+  inline static int coord(const wk_meta_t* meta, const double* coord, void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    auto lambda = [&] { return handler->coord(meta, coord, coord_id); };
-    return catch_unwind(lambda);
+    return catch_unwind([&] { return handler->coord(meta, coord); });
   }
 
-  inline static int ring_end(const wk_meta_t* meta, uint32_t size, uint32_t ringId,
+  inline static int ring_end(const wk_meta_t* meta, uint32_t size, uint32_t ring_id,
                              void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    return catch_unwind([&] { return handler->ring_end(meta, size, ringId); });
+    return catch_unwind([&] { return handler->ring_end(meta, size); });
   }
 
-  inline static int geometry_end(const wk_meta_t* meta, uint32_t partId,
+  inline static int geometry_end(const wk_meta_t* meta, uint32_t part_id,
                                  void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    return catch_unwind([&] { return handler->geometry_end(meta, partId); });
+    return catch_unwind([&] { return handler->geometry_end(meta); });
   }
 
   inline static int feature_end(const wk_vector_meta_t* meta, R_xlen_t feat_id,
                                 void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    return catch_unwind([&] { return handler->feature_end(meta, feat_id); });
+    return catch_unwind([&] { return handler->feature_end(meta); });
   }
 
   inline static SEXP vector_end(const wk_vector_meta_t* meta, void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
     return catch_unwind([&] { return handler->vector_end(meta); });
   }
-
-  inline static void deinitialize(void* handler_data) noexcept {
-    HandlerType* handler = static_cast<HandlerType*>(handler_data);
-    return catch_unwind([&] { return handler->deinitialize(); });
-  }
 };
+
+struct NextHandler final : Handler {
+  NextHandler(const wk_handler_t* handler) : handler_(handler) {}
+
+  Result vector_start(const wk_vector_meta_t* meta) override {
+    feat_id_ = -1;
+    int result = handler_->vector_start(meta, handler_->handler_data);
+    return Result{result};
+  }
+
+  Result feature_start(const wk_vector_meta_t* meta) override {
+    part_id_ = WK_PART_ID_NONE - 1;
+    int result = handler_->feature_start(meta, ++feat_id_, handler_->handler_data);
+    return Result{result};
+  }
+
+  Result null_feature() override {
+    int result = handler_->null_feature(handler_->handler_data);
+    return Result{result};
+  }
+
+  Result geometry_start(const wk_meta_t* meta) override {
+    ring_id_ = -1;
+    coord_id_ = -1;
+    int result = handler_->geometry_start(meta, ++part_id_, handler_->handler_data);
+    return Result{result};
+  }
+
+  Result ring_start(const wk_meta_t* meta, uint32_t size) override {
+    int result = handler_->ring_start(meta, size, ++ring_id_, handler_->handler_data);
+    return Result{result};
+  }
+
+  Result coord(const wk_meta_t* meta, const double* coord) override {
+    int result = handler_->coord(meta, coord, ++coord_id_, handler_->handler_data);
+    return Result{result};
+  }
+
+  Result ring_end(const wk_meta_t* meta, uint32_t size) override {
+    int result = handler_->ring_end(meta, size, ring_id_, handler_->handler_data);
+    return Result{result};
+  }
+
+  Result geometry_end(const wk_meta_t* meta) override {
+    int result = handler_->geometry_end(meta, part_id_, handler_->handler_data);
+    return Result{result};
+  }
+
+  Result feature_end(const wk_vector_meta_t* meta) override {
+    int result = handler_->feature_end(meta, feat_id_, handler_->handler_data);
+    return Result{result};
+  }
+
+  SEXP vector_end(const wk_vector_meta_t* meta) override {
+    return handler_->vector_end(meta, handler_->handler_data);
+  }
+
+private:
+  const wk_handler_t* handler_;
+  // keep track of ids and forward to external handler
+  R_xlen_t feat_id_ = -1;
+  uint32_t part_id_ = WK_PART_ID_NONE - 1;
+  uint32_t ring_id_ = -1;
+  uint32_t coord_id_ = -1;
+};
+
+};  // namespace wk
