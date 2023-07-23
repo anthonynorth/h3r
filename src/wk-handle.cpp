@@ -23,12 +23,20 @@ struct Reader {
 
   virtual SEXP read_features(const vctr_view<T>& features) {
     vector_meta_.size = features.size();
-    next_.vector_start(&vector_meta_);
+
+    auto res = next_.vector_start(&vector_meta_);
+    if (res != Result::Continue) return next_.vector_end(&vector_meta_);
 
     for (auto feature : features) {
-      next_.feature_start(&vector_meta_);
-      read_feature(feature);
-      next_.feature_end(&vector_meta_);
+      if (res == Result::Abort) break;
+
+      res = next_.feature_start(&vector_meta_);
+      if (res != Result::Continue) continue;
+
+      res = read_feature(feature);
+      if (res != Result::Continue) continue;
+
+      res = next_.feature_end(&vector_meta_);
     }
 
     return next_.vector_end(&vector_meta_);
@@ -55,12 +63,21 @@ struct CellCentroidReader : Reader<uint64_t> {
   }
 
   Result read_feature(const uint64_t& cell) override {
-    LatLng point;
-    cellToLatLng(cell, &point);
+    bool not_null = !h3_is_null(cell);
+    meta_.size = not_null;
 
-    meta_.size = 1;
-    next_.geometry_start(&meta_);
-    read_coord(point);
+    auto res = next_.geometry_start(&meta_);
+    if (res != Result::Continue) return res;
+
+    if (not_null) {
+      LatLng point;
+      if (auto err = cellToLatLng(cell, &point); err != H3ErrorCodes::E_SUCCESS)
+        throw std::runtime_error("H3 Error");
+
+      auto res = read_coord(point);
+      if (res != Result::Continue) return res;
+    }
+
     return next_.geometry_end(&meta_);
   }
 };
@@ -73,25 +90,38 @@ struct CellPolygonReader : Reader<uint64_t> {
   }
 
   Result read_feature(const uint64_t& cell) override {
-    CellBoundary boundary;
-    cellToBoundary(cell, &boundary);
+    bool not_null = !h3_is_null(cell);
+    meta_.size = not_null;
 
-    meta_.size = 1;
-    next_.geometry_start(&meta_);
-    read_coords(boundary);
+    auto res = next_.geometry_start(&meta_);
+    if (res != Result::Continue) return res;
+
+    if (not_null) {
+      CellBoundary boundary;
+      if (auto err = cellToBoundary(cell, &boundary); err != H3ErrorCodes::E_SUCCESS)
+        throw std::runtime_error("H3 Error");
+
+      res = read_coords(boundary);
+      if (res != Result::Continue) return res;
+    }
+
     return next_.geometry_end(&meta_);
   }
 
   Result read_coords(const CellBoundary& boundary) {
     uint32_t ring_size = boundary.numVerts + 1;
-    next_.ring_start(&meta_, ring_size);
+
+    auto res = next_.ring_start(&meta_, ring_size);
+    if (res != Result::Continue) return res;
 
     for (int i = 0; i < boundary.numVerts; i++) {
-      read_coord(boundary.verts[i]);
+      res = read_coord(boundary.verts[i]);
+      if (res != Result::Continue) return res;
     }
 
     // close the polygon
-    read_coord(boundary.verts[0]);
+    res = read_coord(boundary.verts[0]);
+    if (res != Result::Continue) return res;
 
     return next_.ring_end(&meta_, ring_size);
   }
