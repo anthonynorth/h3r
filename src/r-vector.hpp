@@ -180,8 +180,13 @@ private:
   const size_type size_;
 };
 
-// mutable vctr with stack protect
-template <typename T>
+enum class ProtectType {
+  StackProtect,
+  ObjectPreserve
+};
+
+// mutable vctr with protect
+template <typename T, ProtectType Protect = ProtectType::StackProtect>
 struct vctr {
   using pointer = vctr_ptr<T, false>;
   using size_type = typename pointer::size_type;
@@ -235,14 +240,32 @@ private:
   }
 
   pointer protect(pointer ptr) {
-    PROTECT_WITH_INDEX(ptr, &pidx_);
+    if constexpr (Protect == ProtectType::StackProtect) {
+      PROTECT_WITH_INDEX(ptr, &pidx_);
+    } else {
+      R_PreserveObject(ptr);
+    }
+
     return ptr;
   }
 
   pointer reprotect(pointer ptr) {
-    REPROTECT(ptr, pidx_);
+    if constexpr (Protect == ProtectType::StackProtect) {
+      REPROTECT(ptr, pidx_);
+    } else {
+      R_PreserveObject(ptr);
+      R_ReleaseObject(ptr_);
+    }
+
     return ptr;
   }
 
-  void unprotect(pointer ptr) { UNPROTECT(1); }
+  void unprotect(pointer ptr) {
+    if constexpr (Protect == ProtectType::StackProtect) {
+      UNPROTECT(1);
+      pidx_ = -1;
+    } else {
+      R_ReleaseObject(ptr);
+    }
+  }
 };
