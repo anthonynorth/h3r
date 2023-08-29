@@ -4,6 +4,7 @@
 #include "h3api.hpp"
 #include "r-vector.hpp"
 #include "wk.hpp"
+#include "vctrs.hpp"
 
 struct CellWriter : wk::Handler {
   using Result = wk::Result;
@@ -46,7 +47,7 @@ struct CellWriter : wk::Handler {
   }
 
   virtual SEXP vector_end(const wk_vector_meta_t* meta) override {
-    result_.set_cls({"h3_index", "vctrs_vctr"});
+    result_.set_cls(vctrs_cls::h3_cell);
     return result_;
   }
 
