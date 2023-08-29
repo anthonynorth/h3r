@@ -74,7 +74,7 @@ struct CellCentroidReader : Reader<uint64_t> {
       if (auto err = cellToLatLng(cell, &point); err != H3ErrorCodes::E_SUCCESS)
         throw std::runtime_error("H3 Error");
 
-      auto res = read_coord(point);
+      res = read_coord(point);
       if (res != Result::Continue) return res;
     }
 
@@ -127,6 +127,63 @@ struct CellPolygonReader : Reader<uint64_t> {
   }
 };
 
+// read directed edges
+struct DirectedEdgeReader : Reader<uint64_t> {
+  DirectedEdgeReader(wk::NextHandler next) : Reader(next) {
+    WK_VECTOR_META_RESET(vector_meta_, WK_LINESTRING);
+    WK_META_RESET(meta_, WK_LINESTRING);
+  }
+
+  Result read_feature(const uint64_t& edge) override {
+    bool not_null = !h3_is_null(edge);
+    meta_.size = not_null;
+
+    auto res = next_.geometry_start(&meta_);
+    if (res != Result::Continue) return res;
+
+    if (not_null) {
+      CellBoundary boundary;
+      if (auto err = directedEdgeToBoundary(edge, &boundary); err != H3ErrorCodes::E_SUCCESS)
+        throw std::runtime_error("H3 Error");
+
+      res = read_coord(boundary.verts[0]);
+      if (res != Result::Continue) return res;
+
+      res = read_coord(boundary.verts[1]);
+      if (res != Result::Continue) return res;
+    }
+
+    return next_.geometry_end(&meta_);
+  }
+};
+
+// read vertexes
+struct VertexReader : Reader<uint64_t> {
+  VertexReader(wk::NextHandler next) : Reader(next) {
+    WK_VECTOR_META_RESET(vector_meta_, WK_POINT);
+    WK_META_RESET(meta_, WK_POINT);
+  }
+
+  Result read_feature(const uint64_t& cell) override {
+    bool not_null = !h3_is_null(cell);
+    meta_.size = not_null;
+
+    auto res = next_.geometry_start(&meta_);
+    if (res != Result::Continue) return res;
+
+    if (not_null) {
+      LatLng point;
+      if (auto err = vertexToLatLng(cell, &point); err != H3ErrorCodes::E_SUCCESS)
+        throw std::runtime_error("H3 Error");
+
+      auto res = read_coord(point);
+      if (res != Result::Continue) return res;
+    }
+
+    return next_.geometry_end(&meta_);
+  }
+};
+
 SEXP handle_cell(SEXP data, wk_handler_t* handler) {
   return catch_unwind([&] {
     vctr_view<uint64_t> cells = VECTOR_ELT(data, 0);
@@ -144,4 +201,28 @@ SEXP handle_cell(SEXP data, wk_handler_t* handler) {
 
 extern "C" SEXP ffi_handle_cell(SEXP data, SEXP handler_xptr) {
   return wk_handler_run_xptr(&handle_cell, data, handler_xptr);
+}
+
+SEXP handle_directed_edge(SEXP data, wk_handler_t* handler) {
+  return catch_unwind([&] {
+    vctr_view<uint64_t> edges = VECTOR_ELT(data, 0);
+    DirectedEdgeReader reader(handler);
+    return reader.read_features(edges);
+  });
+}
+
+extern "C" SEXP ffi_handle_directed_edge(SEXP data, SEXP handler_xptr) {
+  return wk_handler_run_xptr(&handle_directed_edge, data, handler_xptr);
+}
+
+SEXP handle_vertex(SEXP data, wk_handler_t* handler) {
+  return catch_unwind([&] {
+    vctr_view<uint64_t> vertexes = VECTOR_ELT(data, 0);
+    VertexReader reader(handler);
+    return reader.read_features(vertexes);
+  });
+}
+
+extern "C" SEXP ffi_handle_vertex(SEXP data, SEXP handler_xptr) {
+  return wk_handler_run_xptr(&handle_vertex, data, handler_xptr);
 }
