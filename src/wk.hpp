@@ -99,7 +99,8 @@ private:
     return catch_unwind([&] { return handler->ring_start(meta, size); });
   }
 
-  inline static int coord(const wk_meta_t* meta, const double* coord, void* handler_data) noexcept {
+  inline static int coord(const wk_meta_t* meta, const double* coord, uint32_t coord_id,
+                          void* handler_data) noexcept {
     HandlerType* handler = static_cast<HandlerType*>(handler_data);
     return catch_unwind([&] { return handler->coord(meta, coord); });
   }
