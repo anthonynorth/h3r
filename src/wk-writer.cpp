@@ -118,7 +118,7 @@ int h3_point_writer_coord(const wk_meta_t* meta, const double* coord, uint32_t c
         data->has_coord = 1;
     }
 
-    LatLng latlng = {.lng = degsToRads(coord[0]), .lat = degsToRads(coord[1]) };
+    LatLng latlng = { degsToRads(coord[1]), degsToRads(coord[0]) };
     latLngToCell(&latlng, data->res, &data->h3[data->feat_id - 1]);
 
     return WK_CONTINUE;
@@ -160,7 +160,7 @@ void h3_point_writer_finalize(void* handler_data) {
     }
 }
 
-SEXP h3r_c_point_writer_new(SEXP res_sexp) {
+extern "C" SEXP h3r_c_point_writer_new(SEXP res_sexp) {
     int res = INTEGER(res_sexp)[0];
     if (res > 15 || res < 0) {
         Rf_error("`res` must be between 0 and 15");
