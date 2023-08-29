@@ -11,8 +11,11 @@ constexpr bool is_in(T value, Ts... values) {
   return ((values == value) || ...);
 }
 
+namespace std {
+// clang-format off
+
 // backport from c++20
-template<class To, class From>
+template <class To, class From>
 [[nodiscard]]
 constexpr std::enable_if_t<
   sizeof(To) == sizeof(From) &&
@@ -28,3 +31,6 @@ bit_cast(const From& src) noexcept {
   std::memcpy(&dst, &src, sizeof(To));
   return dst;
 }
+
+// clang-format on
+};  // namespace std

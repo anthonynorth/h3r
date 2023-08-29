@@ -121,7 +121,7 @@ private:
     if constexpr (std::is_same_v<int, t>)
       return INTEGER_ELT(data_, i);
     else if constexpr (std::is_same_v<int64_t, t> || std::is_same_v<uint64_t, t>)
-      return bit_cast<T>(REAL_ELT(data_, i));
+      return std::bit_cast<T>(REAL_ELT(data_, i));
     else if constexpr (std::is_same_v<double, t>)
       return REAL_ELT(data_, i);
     else if constexpr (std::is_same_v<std::string_view, t>)
@@ -143,7 +143,7 @@ private:
     if constexpr (std::is_same_v<int, t>)
       return SET_INTEGER_ELT(data_, i, value);
     else if constexpr (std::is_same_v<int64_t, t> || std::is_same_v<uint64_t, t>)
-      return SET_REAL_ELT(data_, i, bit_cast<double>(value));
+      return SET_REAL_ELT(data_, i, std::bit_cast<double>(value));
     else if constexpr (std::is_same_v<double, t>)
       return SET_REAL_ELT(data_, i, value);
     else if constexpr (std::is_same_v<std::string_view, t>)

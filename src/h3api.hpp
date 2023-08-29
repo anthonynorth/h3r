@@ -10,7 +10,7 @@
 #include "h3/h3api.h"
 #include "utils.hpp"
 
-const H3Index h3_null = bit_cast<H3Index>(NA_REAL);
+const H3Index h3_null = std::bit_cast<H3Index>(NA_REAL);
 
 inline bool h3_is_null(H3Index h3_index) {
   return h3_index == h3_null;
@@ -33,7 +33,7 @@ inline std::string_view h3_to_str(H3Index h3_index, std::array<char, 17>& str) {
 
   auto [ptr, ec] = std::to_chars(str.begin(), str.end(), h3_index, 16);
 
-  if (ec != std::errc()) 
+  if (ec != std::errc())
     throw std::invalid_argument(std::make_error_code(ec).message());
 
   return std::string_view(str.begin(), ptr - str.begin());
