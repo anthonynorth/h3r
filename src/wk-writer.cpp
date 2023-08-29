@@ -46,12 +46,7 @@ struct CellWriter : wk::Handler {
   }
 
   virtual SEXP vector_end(const wk_vector_meta_t* meta) override {
-    SEXP index_class = PROTECT(Rf_allocVector(STRSXP, 2));
-    SET_STRING_ELT(index_class, 0, Rf_mkChar("h3_index"));
-    SET_STRING_ELT(index_class, 1, Rf_mkChar("vctrs_vctr"));
-    Rf_setAttrib(result_, R_ClassSymbol, index_class);
-    UNPROTECT(1);
-
+    result_.set_cls({"h3_index", "vctrs_vctr"});
     return result_;
   }
 

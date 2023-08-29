@@ -195,6 +195,10 @@ struct vctr {
 
   vctr() : vctr(0) {}
   explicit vctr(size_type size) : ptr_(protect(allocate(size))), size_(size), capacity_(size) {}
+  vctr(std::initializer_list<T> list) : vctr(list.size()) {
+    std::copy(list.begin(), list.end(), begin());
+  }
+
   ~vctr() { unprotect(ptr_); }
 
   value_type operator[](size_type i) { return ptr_[i]; }
@@ -219,6 +223,8 @@ struct vctr {
     if (size() >= capacity()) reserve(size() == 0 ? 1 : size() * 2);
     ptr_[size_++] = value;
   }
+
+  void set_cls(const vctr<std::string_view>& cls) { Rf_setAttrib(ptr_, R_ClassSymbol, cls); }
 
   iterator begin() { return ptr_; }
   iterator end() { return ptr_ + size(); }
