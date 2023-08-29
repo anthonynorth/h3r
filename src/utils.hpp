@@ -6,6 +6,11 @@
 template <typename...>
 inline constexpr bool unsupported = false;
 
+template <typename T, typename... Ts>
+constexpr bool is_in(T value, Ts... values) {
+  return ((values == value) || ...);
+}
+
 // backport from c++20
 template<class To, class From>
 [[nodiscard]]
@@ -18,7 +23,7 @@ bit_cast(const From& src) noexcept {
   static_assert(std::is_trivially_constructible_v<To>,
     "This implementation additionally requires "
     "destination type to be trivially constructible");
- 
+
   To dst;
   std::memcpy(&dst, &src, sizeof(To));
   return dst;

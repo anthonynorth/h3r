@@ -17,7 +17,7 @@ h3_index_point_writer <- function(res) {
     stop("`res` must be an integer vector of length 1", call. = FALSE)
   }
 
-  wk::new_wk_handler(.Call(h3r_c_point_writer_new, res), "h3_index_point_handler")
+  wk::new_wk_handler(.Call(ffi_cell_writer_new, res), "h3_cell_writer")
 }
 
 #' @rdname h3_index_point_writer

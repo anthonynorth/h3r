@@ -8,7 +8,7 @@
 
 namespace wk {
 
-enum class Result {
+enum Result : int {
   Continue = WK_CONTINUE,
   Abort = WK_ABORT,
   AbortFeature = WK_ABORT_FEATURE
