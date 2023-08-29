@@ -33,8 +33,10 @@ struct vctr_ptr {
 
   using iterator_category = std::random_access_iterator_tag;
   using value_type = value;
-  using size_type = R_xlen_t;
-  using difference_type = R_xlen_t;
+  using difference_type = ptrdiff_t;
+  using size_type = ptrdiff_t;
+  using pointer = value*;
+  using reference = value&;
 
   vctr_ptr(const SEXP data, size_type idx = 0) : data_(data), idx_(idx) {
     using namespace std::literals;
@@ -45,6 +47,7 @@ struct vctr_ptr {
   }
 
   SEXP data() const { return data_; }
+  operator SEXP() const { return data_; }
 
   value_type operator*() { return {*this, idx_}; }
   value_type operator*() const { return {*this, idx_}; }
@@ -57,21 +60,9 @@ struct vctr_ptr {
     return *this;
   };
 
-  vctr_ptr& operator++(int) {
-    auto temp = *this;
-    ++idx_;
-    return temp;
-  };
-
   vctr_ptr& operator--() {
     --idx_;
     return *this;
-  };
-
-  vctr_ptr& operator--(int) {
-    auto temp = *this;
-    --idx_;
-    return temp;
   };
 
   vctr_ptr& operator+=(difference_type n) {
@@ -84,9 +75,7 @@ struct vctr_ptr {
     return *this;
   }
 
-  friend bool operator==(const vctr_ptr& x, const vctr_ptr& y) {
-    return x.idx_ == y.idx_;
-  }
+  friend bool operator==(const vctr_ptr& x, const vctr_ptr& y) { return x.idx_ == y.idx_; }
   friend bool operator!=(const vctr_ptr& x, const vctr_ptr& y) { return !(x == y); }
   friend bool operator<(const vctr_ptr& x, const vctr_ptr& y) { return x.idx_ < y.idx_; }
   friend bool operator>(const vctr_ptr& x, const vctr_ptr& y) { return y < x; }
@@ -108,6 +97,7 @@ struct vctr_ptr {
   }
 
   friend vctr_ptr operator-(difference_type n, const vctr_ptr& x) { return x - n; }
+  friend difference_type operator-(const vctr_ptr& x, const vctr_ptr& y) { return x.idx_ - y.idx_; }
 
   // wrapper for deref-assignment
   struct value {
@@ -116,12 +106,13 @@ struct vctr_ptr {
 
     T operator*() const { return ptr.get(idx); }
     operator T() const { return ptr.get(idx); }
-    void operator=(const T& value) const { return ptr.set(idx, value); }
+    void operator=(T value) { return ptr.set(idx, value); }
+    void operator=(value value) { return ptr.set(idx, value); }
   };
 
 private:
   SEXP data_;
-  size_type idx_ = 0;
+  size_type idx_;
 
   // get underlying value
   T get(size_type i) const {
@@ -145,7 +136,7 @@ private:
   }
 
   // set underyling value
-  void set(size_type i, const T& value) const {
+  void set(size_type i, T value) const {
     static_assert(!is_const, "Unsupported for const");
     using t = std::remove_cv_t<T>;
 
@@ -159,8 +150,7 @@ private:
       if (value.data() == nullptr)
         return SET_STRING_ELT(data_, i, NA_STRING);
       else
-        return SET_STRING_ELT(data_, i,
-                              Rf_mkCharLenCE(value.data(), value.size(), CE_BYTES));
+        return SET_STRING_ELT(data_, i, Rf_mkCharLenCE(value.data(), value.size(), CE_BYTES));
     else if constexpr (std::is_same_v<SEXP, t>)
       return SET_VECTOR_ELT(data_, i, value);
     else
@@ -198,18 +188,61 @@ struct vctr {
   using value_type = typename pointer::value_type;
   using iterator = pointer;
 
-  vctr(const SEXP data) : ptr_(PROTECT(data)), size_(Rf_xlength(data)) {}
-  vctr(size_type size) : vctr(Rf_allocVector(sexp_type<T>(), size)) {}
-  ~vctr() { UNPROTECT(1); }
+  vctr() : vctr(0) {}
+  explicit vctr(size_type size) : ptr_(protect(allocate(size))), size_(size), capacity_(size) {}
+  ~vctr() { unprotect(ptr_); }
 
   value_type operator[](size_type i) { return ptr_[i]; }
-  operator SEXP() const { return ptr_.data(); }
+
+  operator SEXP() const {
+    if (size() != capacity()) return allocate_and_copy(size());
+
+    return ptr_.data();
+  }
+
   size_type size() const { return size_; }
+  size_type capacity() const { return capacity_; }
+
+  void reserve(size_type n) {
+    if (n <= capacity()) return;
+
+    capacity_ = n;
+    ptr_ = reprotect(allocate_and_copy(n));
+  }
+
+  void push_back(T value) {
+    if (size() >= capacity()) reserve(size() == 0 ? 1 : size() * 2);
+    ptr_[size_++] = value;
+  }
 
   iterator begin() { return ptr_; }
   iterator end() { return ptr_ + size(); }
 
 private:
-  const pointer ptr_;
-  const size_type size_;
+  int pidx_ = -1;
+  pointer ptr_;
+  size_type size_;
+  size_type capacity_;
+
+  pointer allocate(size_type n) const { return Rf_allocVector(sexp_type<T>(), n); }
+
+  pointer allocate_and_copy(size_type n) const {
+    pointer tmp = PROTECT(allocate(n));
+    std::copy(ptr_, ptr_ + std::min(size(), n), tmp);
+    Rf_setAttrib(tmp.data(), R_ClassSymbol, Rf_getAttrib(ptr_.data(), R_ClassSymbol));
+    UNPROTECT(1);
+    return tmp;
+  }
+
+  pointer protect(pointer ptr) {
+    PROTECT_WITH_INDEX(ptr, &pidx_);
+    return ptr;
+  }
+
+  pointer reprotect(pointer ptr) {
+    REPROTECT(ptr, pidx_);
+    return ptr;
+  }
+
+  void unprotect(pointer ptr) { UNPROTECT(1); }
 };
