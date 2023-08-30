@@ -11,9 +11,9 @@ decltype(auto) catch_unwind(const Fn& fn, Params&&... params) noexcept {
   try {
     return fn(std::forward<Params>(params)...);
   } catch (const std::exception& err) {
-    Rf_errorcall(R_NilValue, err.what());
+    Rf_error("%s", err.what());
   } catch (...) {
-    Rf_errorcall(R_NilValue, "C++ error (unknown cause)");
+    Rf_error("%s", "C++ error (unknown cause)");
   }
 
   std::unreachable();
