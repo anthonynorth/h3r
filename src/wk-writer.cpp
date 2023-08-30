@@ -51,7 +51,7 @@ struct CellWriter : wk::Handler {
     return Result::Continue;
   }
 
-  Result geometry_end(const wk_meta_t* meta) override {
+  Result feature_end(const wk_vector_meta_t* meta) override {
     // didn't write a coordinate?
     if (coord_id_ == -1) result_.push_back(h3_null);
     return Result::Continue;
