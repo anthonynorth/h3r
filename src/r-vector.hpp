@@ -6,21 +6,18 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include "r-traits.hpp"
 #include "utils.hpp"
 
 template <typename T>
 constexpr int sexp_type() {
-  using t = std::remove_cv_t<T>;
-
-  if constexpr (std::is_same_v<int, t>)
+  if constexpr (is_int32_v<T>)
     return INTSXP;
-  else if constexpr (std::is_same_v<int64_t, t> || std::is_same_v<uint64_t, t>)
+  else if constexpr (is_int64_v<T> || is_double_v<T>)
     return REALSXP;
-  else if constexpr (std::is_same_v<double, t>)
-    return REALSXP;
-  else if constexpr (std::is_same_v<std::string_view, t>)
+  else if constexpr (is_string_v<T>)
     return STRSXP;
-  else if constexpr (std::is_same_v<SEXP, t>)
+  else if constexpr (is_list_v<T>)
     return VECSXP;
   else
     static_assert(unsupported<T>, "Unsupported type");
@@ -116,21 +113,29 @@ private:
 
   // get underlying value
   T get(size_type i) const {
-    using t = std::remove_cv_t<T>;
-
-    if constexpr (std::is_same_v<int, t>)
+    // int32
+    if constexpr (is_int32_v<T>)
       return INTEGER_ELT(data_, i);
-    else if constexpr (std::is_same_v<int64_t, t> || std::is_same_v<uint64_t, t>)
-      return std::bit_cast<T>(REAL_ELT(data_, i));
-    else if constexpr (std::is_same_v<double, t>)
+
+    // double
+    else if constexpr (is_double_v<T>)
       return REAL_ELT(data_, i);
-    else if constexpr (std::is_same_v<std::string_view, t>)
-      if (SEXP str = STRING_ELT(data_, i); str == NA_STRING)
-        return std::string_view();
-      else
-        return std::string_view(CHAR(str));
-    else if constexpr (std::is_same_v<SEXP, t>)
+
+    // int64
+    else if constexpr (is_int64_v<T>)
+      return std::bit_cast<T>(REAL_ELT(data_, i));
+
+    // string
+    else if constexpr (is_string_v<T>) {
+      SEXP str = STRING_ELT(data_, i);
+      return str == NA_STRING ? std::string_view() : std::string_view(CHAR(str));
+    }
+
+    // list
+    else if constexpr (is_list_v<T>)
       return VECTOR_ELT(data_, i);
+
+    // unsupported
     else
       static_assert(unsupported<T>, "Unsupported type");
   }
@@ -138,21 +143,33 @@ private:
   // set underyling value
   void set(size_type i, T value) const {
     static_assert(!is_const, "Unsupported for const");
-    using t = std::remove_cv_t<T>;
 
-    if constexpr (std::is_same_v<int, t>)
+    // int32
+    if constexpr (is_int32_v<T>)
       return SET_INTEGER_ELT(data_, i, value);
-    else if constexpr (std::is_same_v<int64_t, t> || std::is_same_v<uint64_t, t>)
-      return SET_REAL_ELT(data_, i, std::bit_cast<double>(value));
-    else if constexpr (std::is_same_v<double, t>)
+
+    // double
+    else if constexpr (is_double_v<T>)
       return SET_REAL_ELT(data_, i, value);
-    else if constexpr (std::is_same_v<std::string_view, t>)
-      if (value.data() == nullptr)
-        return SET_STRING_ELT(data_, i, NA_STRING);
-      else
-        return SET_STRING_ELT(data_, i, Rf_mkCharLenCE(value.data(), value.size(), CE_BYTES));
-    else if constexpr (std::is_same_v<SEXP, t>)
-      return SET_VECTOR_ELT(data_, i, value);
+
+    // int64
+    else if constexpr (is_int64_v<T>)
+      return SET_REAL_ELT(data_, i, std::bit_cast<double>(value));
+
+    // string
+    else if constexpr (is_string_v<T>) {
+      return (value.data() == nullptr)
+                 ? SET_STRING_ELT(data_, i, NA_STRING)
+                 : SET_STRING_ELT(data_, i, Rf_mkCharLenCE(value.data(), value.size(), CE_BYTES));
+    }
+
+    // list
+    else if constexpr (is_list_v<T>) {
+      SET_VECTOR_ELT(data_, i, value);
+      return;
+    }
+
+    // unsupported
     else
       static_assert(unsupported<T>, "Unsupported type");
   }
