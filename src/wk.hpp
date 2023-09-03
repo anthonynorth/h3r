@@ -14,6 +14,31 @@ enum Result : int {
   AbortFeature = WK_ABORT_FEATURE
 };
 
+template<typename T>
+const char* fmt_geometry_type(T geometry_type) {
+  static_assert(std::is_same_v<T, wk_geometery_type_enum> || std::is_same_v<T, uint32_t>);
+  switch (geometry_type) {
+    case WK_GEOMETRY:
+      return "geometry";
+    case WK_POINT:
+      return "point";
+    case WK_LINESTRING:
+      return "linestring";
+    case WK_POLYGON:
+      return "polygon";
+    case WK_MULTIPOINT:
+      return "multipoint";
+    case WK_MULTILINESTRING:
+      return "multilinestring";
+    case WK_MULTIPOLYGON:
+      return "multipolygon";
+    case WK_GEOMETRYCOLLECTION:
+      return "geometrycollection";
+    default:
+      return "unknown";
+  }
+}
+
 // derived from wk/internals
 struct Handler {
   virtual ~Handler() {}

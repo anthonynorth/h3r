@@ -26,26 +26,20 @@ struct CellWriter : wk::Handler {
     // EMPTY and any set of features that (could) contain a single point work with this
     // handler! (error otherwise)
     if (meta->size != 0 &&
-        !is_in(meta->geometry_type, WK_POINT, WK_MULTIPOINT, WK_GEOMETRYCOLLECTION)) {
-      auto msg = "[" + std::to_string(feat_id_ + 1) + "] Can't convert geometry with type " +
-                 std::to_string(meta->geometry_type) + " to cell";
-      throw std::runtime_error(msg);
-    }
+        !is_in(meta->geometry_type, WK_POINT, WK_MULTIPOINT, WK_GEOMETRYCOLLECTION))
+      throw error("[%i] Cannot convert geometry type '%s' to h3_cell", cur_feat(),
+                  wk::fmt_geometry_type(meta->geometry_type));
 
     return Result::Continue;
   }
 
   Result coord(const wk_meta_t* meta, const double* coord) override {
-    if (++coord_id_ != 0) {
-      auto msg =
-          "[" + std::to_string(feat_id_ + 1) + "] Feature contains more than one coordinate.";
-      throw std::runtime_error(msg);
-    }
+    if (++coord_id_ != 0) throw error("[%i] Feature must contain 0 or 1 coordinate", cur_feat());
 
     uint64_t cell;
     LatLng point = {degsToRads(coord[1]), degsToRads(coord[0])};
-    if (auto err = latLngToCell(&point, res_, &cell); err != H3ErrorCodes::E_SUCCESS)
-      throw std::runtime_error("H3 Error");
+    if (auto err = latLngToCell(&point, res_, &cell); err != E_SUCCESS)
+      throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
 
     result_.push_back(cell);
     return Result::Continue;
@@ -67,6 +61,8 @@ private:
   uint64_t feat_id_ = -1;
   uint32_t coord_id_ = -1;
   vctr<uint64_t, ProtectType::ObjectPreserve> result_;
+
+  uint64_t cur_feat() const { return feat_id_ + 1; }
 };
 
 extern "C" SEXP ffi_cell_writer_new(SEXP res_sexp) {

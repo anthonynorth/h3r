@@ -6,6 +6,7 @@
 #include "r-safe.hpp"
 #include "r-vector.hpp"
 #include "wk.hpp"
+#include "errors.hpp"
 
 // h3index vector reader
 template <typename T>
@@ -30,6 +31,7 @@ struct Reader {
     for (auto feature : features) {
       if (res == Result::Abort) break;
 
+      ++feat_id_;
       res = next_.feature_start(&vector_meta_);
       if (res != Result::Continue) continue;
 
@@ -53,6 +55,9 @@ protected:
   wk::NextHandler next_;
   wk_vector_meta_t vector_meta_;
   wk_meta_t meta_;
+  int64_t feat_id_ = -1;
+
+  int64_t cur_feat() const { return feat_id_ + 1; }
 };
 
 // read cell centroids
@@ -72,7 +77,7 @@ struct CellCentroidReader : Reader<uint64_t> {
     if (not_null) {
       LatLng point;
       if (auto err = cellToLatLng(cell, &point); err != H3ErrorCodes::E_SUCCESS)
-        throw std::runtime_error("H3 Error");
+        throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
 
       res = read_coord(point);
       if (res != Result::Continue) return res;
@@ -99,7 +104,7 @@ struct CellPolygonReader : Reader<uint64_t> {
     if (not_null) {
       CellBoundary boundary;
       if (auto err = cellToBoundary(cell, &boundary); err != H3ErrorCodes::E_SUCCESS)
-        throw std::runtime_error("H3 Error");
+        throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
 
       res = read_coords(boundary);
       if (res != Result::Continue) return res;
@@ -144,7 +149,7 @@ struct DirectedEdgeReader : Reader<uint64_t> {
     if (not_null) {
       CellBoundary boundary;
       if (auto err = directedEdgeToBoundary(edge, &boundary); err != H3ErrorCodes::E_SUCCESS)
-        throw std::runtime_error("H3 Error");
+        throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
 
       res = read_coord(boundary.verts[0]);
       if (res != Result::Continue) return res;
@@ -174,7 +179,7 @@ struct VertexReader : Reader<uint64_t> {
     if (not_null) {
       LatLng point;
       if (auto err = vertexToLatLng(cell, &point); err != H3ErrorCodes::E_SUCCESS)
-        throw std::runtime_error("H3 Error");
+        throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
 
       auto res = read_coord(point);
       if (res != Result::Continue) return res;
