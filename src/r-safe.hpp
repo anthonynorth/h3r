@@ -16,5 +16,5 @@ decltype(auto) catch_unwind(const Fn& fn, Params&&... params) noexcept {
     Rf_error("%s", "C++ error (unknown cause)");
   }
 
-  std::unreachable();
+  bp::unreachable();
 }

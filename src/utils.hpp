@@ -11,7 +11,7 @@ constexpr bool is_in(T value, Ts... values) {
   return ((values == value) || ...);
 }
 
-namespace std {
+namespace bp {
 // clang-format off
 
 // backport from c++20
@@ -32,6 +32,7 @@ bit_cast(const From& src) noexcept {
   return dst;
 }
 
+// backport from c++23
 [[noreturn]] inline void unreachable() {
 #if defined __GNUC__  // GCC, Clang, ICC
   __builtin_unreachable();
@@ -41,4 +42,4 @@ bit_cast(const From& src) noexcept {
 }
 
 // clang-format on
-};  // namespace std
+};  // namespace bp

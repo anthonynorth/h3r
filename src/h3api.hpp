@@ -11,7 +11,7 @@
 #include "h3/h3api.h"
 #include "utils.hpp"
 
-const H3Index h3_null = std::bit_cast<H3Index>(NA_REAL);
+const H3Index h3_null = bp::bit_cast<H3Index>(NA_REAL);
 
 inline bool h3_is_null(H3Index h3_index) {
   return h3_index == h3_null;

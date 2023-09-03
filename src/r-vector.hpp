@@ -123,7 +123,7 @@ private:
 
     // int64
     else if constexpr (is_int64_v<T>)
-      return std::bit_cast<T>(REAL_ELT(data_, i));
+      return bp::bit_cast<T>(REAL_ELT(data_, i));
 
     // string
     else if constexpr (is_string_v<T>) {
@@ -154,7 +154,7 @@ private:
 
     // int64
     else if constexpr (is_int64_v<T>)
-      return SET_REAL_ELT(data_, i, std::bit_cast<double>(value));
+      return SET_REAL_ELT(data_, i, bp::bit_cast<double>(value));
 
     // string
     else if constexpr (is_string_v<T>) {
