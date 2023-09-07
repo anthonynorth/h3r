@@ -1,43 +1,15 @@
-
-#' wk handlers
-#'
-#' @param res An index resolution between 0 (large hexagons)
-#'   and 15 (small hexagons).
-#'
-#' @return
-#'   - `wk_index_point_writer()`: A [wk handler][wk::wk_handle]
-#' @export
-#'
-#' @examples
-#' wk::wk_handle(wk::xy(0, 0), h3_index_point_writer(7))
-#'
-h3_index_point_writer <- function(res) {
-  res <- vec_cast(res, integer())
-  if (length(res) != 1) {
-    stop("`res` must be an integer vector of length 1", call. = FALSE)
-  }
-
-  wk::new_wk_handler(.Call(ffi_cell_writer_new, res), "h3_cell_writer")
-}
-
-#' @rdname h3_index_point_writer
-#' @export
-h3_set_writer <- function(res) {
-  stop("Not implemented")
-}
-
 #' Import H3 Index/Set objects from geometry
 #'
 #' @param x A foreign object
 #' @param ... Unused
-#' @inheritParams h3_index_point_writer
+#' @inheritParams h3_cell_writer
 #'
 #' @rdname h3-import
 #' @return An [h3_index()] or [h3_set()]
 #' @export
 #'
 as_h3_index.wk_xy <- function(x, ..., res) {
-  wk::wk_handle(x, h3_index_point_writer(res))
+  wk::wk_handle(x, h3_cell_writer(res))
 }
 
 #' Export H3 Index/Set objects to geometry

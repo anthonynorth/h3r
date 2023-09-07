@@ -242,6 +242,7 @@ struct vctr {
   }
 
   void set_cls(const vctr<std::string_view>& cls) { Rf_setAttrib(ptr_, R_ClassSymbol, cls); }
+  void set_ptype(const SEXP ptype) { Rf_setAttrib(ptr_, Rf_install("ptype"), ptype); }
 
   iterator begin() { return ptr_; }
   iterator end() { return ptr_ + size(); }
