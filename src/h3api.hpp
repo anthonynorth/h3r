@@ -100,7 +100,7 @@ constexpr double pentagon_radius(int res) {
 
 /// find cells at `res` intersecting the line connecting `source` and `target`, excluding `target`
 inline H3Error line_to_cells(const Coord& source, const Coord& target, int res,
-                             std::unordered_set<uint64_t> cells) {
+                             std::unordered_set<uint64_t>& cells) {
   // sample points that are at most `pentagon_radius` distance apart
   double dist = greatCircleDistanceRads(&source, &target);
   uint64_t n_steps = std::max(std::ceil(dist / pentagon_radius(res)), 1.0);
@@ -119,7 +119,7 @@ inline H3Error line_to_cells(const Coord& source, const Coord& target, int res,
 
 /// find cells at `res` intersecting `linestring`
 inline H3Error linestring_to_cells(const LineString& linestring, int res,
-                                   std::unordered_set<uint64_t> cells) {
+                                   std::unordered_set<uint64_t>& cells) {
   for (auto it = linestring.begin(); it != std::prev(linestring.end()); ++it) {
     if (auto err = line_to_cells(*it, *std::next(it), res, cells); err != E_SUCCESS) return err;
   }
