@@ -97,6 +97,7 @@ struct ListOfCellWriter : wk::Handler {
   Result geometry_end(const wk_meta_t* meta) override {
     if (coords_.empty()) return Result::Continue;
 
+    // points
     if (meta->geometry_type == WK_POINT) {
       uint64_t cell;
 
@@ -104,8 +105,15 @@ struct ListOfCellWriter : wk::Handler {
         throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
 
       cells_.insert(cell);
-      return Result::Continue;
     }
+
+    // linestring
+    else if (meta->geometry_type == WK_LINESTRING) {
+      if (auto err = h3::linestring_to_cells(std::move(coords_), res_, cells_); err != E_SUCCESS)
+        throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
+    }
+
+    return Result::Continue;
   }
 
   Result feature_end(const wk_vector_meta_t* meta) override {
@@ -130,7 +138,7 @@ struct ListOfCellWriter : wk::Handler {
 private:
   int res_;
   int64_t feat_id_ = -1;
-  std::vector<LatLng> coords_;
+  std::vector<Coord> coords_;
   std::unordered_set<uint64_t> cells_;
   vctr<SEXP, ProtectType::ObjectPreserve> result_;
 
