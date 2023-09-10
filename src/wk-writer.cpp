@@ -109,7 +109,8 @@ struct ListOfCellWriter : wk::Handler {
 
     // linestring
     else if (meta->geometry_type == WK_LINESTRING) {
-      if (auto err = h3::linestring_to_cells(std::move(coords_), res_, cells_); err != E_SUCCESS)
+      ArcString arc_string(coords_);
+      if (auto err = h3::arcstring_to_cells(arc_string, res_, cells_); err != E_SUCCESS)
         throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
     }
 

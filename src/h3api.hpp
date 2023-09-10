@@ -98,16 +98,21 @@ constexpr double pentagon_radius(int res) {
   return radii[res];
 }
 
-/// find cells at `res` intersecting the line connecting `source` and `target`, excluding `target`
-inline H3Error line_to_cells(const Coord& source, const Coord& target, int res,
-                             std::unordered_set<uint64_t>& cells) {
-  // sample points that are at most `pentagon_radius` distance apart
-  double dist = greatCircleDistanceRads(&source, &target);
-  uint64_t n_steps = std::max(std::ceil(dist / pentagon_radius(res)), 1.0);
+/// find cell at `res` intersecting `n_vector`
+inline H3Error nvector_to_cell(const NVector& n_vector, int res, uint64_t* cell) {
+  Coord coord = n_vector.to_coord();
+  return latLngToCell(&coord, res, cell);
+}
+
+/// find cells at `res` intersecting `arc` by sampling
+/// NOTE: sampling doesn't include `arc.end`
+inline H3Error arc_to_cells(const Arc& arc, int res, std::unordered_set<uint64_t>& cells) {
+  // distance between arc samples at most 1/3 pentagon_radius apart
+  const double n_steps = std::ceil(3 * arc.length() / pentagon_radius(res));
 
   for (uint64_t i = 0; i < n_steps; i++) {
-    Coord coord = {source.lat * (n_steps - i) / n_steps + target.lat * i / n_steps,
-                   source.lng * (n_steps - i) / n_steps + target.lng * i / n_steps};
+    NVector vec = arc.lerp(i / n_steps);
+    Coord coord = vec.to_coord();
 
     uint64_t cell;
     if (auto err = latLngToCell(&coord, res, &cell); err != E_SUCCESS) return err;
@@ -117,19 +122,18 @@ inline H3Error line_to_cells(const Coord& source, const Coord& target, int res,
   return E_SUCCESS;
 }
 
-/// find cells at `res` intersecting `linestring`
-inline H3Error linestring_to_cells(const LineString& linestring, int res,
-                                   std::unordered_set<uint64_t>& cells) {
-  for (auto it = linestring.begin(); it != std::prev(linestring.end()); ++it) {
-    if (auto err = line_to_cells(*it, *std::next(it), res, cells); err != E_SUCCESS) return err;
+/// find cells at `res` intersecting `arc_string`
+inline H3Error arcstring_to_cells(const ArcString& arc_string, int res, std::unordered_set<uint64_t>& cells) {
+  for (auto arc : arc_string) {
+    if (auto err = arc_to_cells(arc, res, cells); err != E_SUCCESS) return err;
   }
 
-  // last point hasn't been checked
+  // last coord hasn't been checked
   uint64_t cell;
-  if (auto err = latLngToCell(&linestring.back(), res, &cell); err != E_SUCCESS) return err;
+  if (auto err = nvector_to_cell(arc_string.coords.back(), res, &cell); err != E_SUCCESS) return err;
   cells.insert(cell);
 
   return E_SUCCESS;
 }
-};  // namespace h3
 
+};  // namespace h3
