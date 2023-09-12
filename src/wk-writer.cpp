@@ -28,8 +28,7 @@ struct CellWriter : wk::Handler {
   Result geometry_start(const wk_meta_t* meta) override {
     // EMPTY and any set of features that (could) contain a single point work with this
     // handler! (error otherwise)
-    if (meta->size != 0 &&
-        !is_in(meta->geometry_type, WK_POINT, WK_MULTIPOINT, WK_GEOMETRYCOLLECTION))
+    if (meta->size != 0 && !is_in(meta->geometry_type, WK_POINT, WK_MULTIPOINT, WK_GEOMETRYCOLLECTION))
       throw error("[%i] Cannot convert geometry type '%s' to h3_cell", cur_feat(),
                   wk::fmt_geometry_type(meta->geometry_type));
 
@@ -86,11 +85,19 @@ struct ListOfCellWriter : wk::Handler {
 
   Result geometry_start(const wk_meta_t* meta) override {
     coords_.clear();
+    lengths_.clear();
     return Result::Continue;
   }
 
   Result coord(const wk_meta_t* meta, const double* coord) override {
     coords_.push_back({degsToRads(coord[1]), degsToRads(coord[0])});
+    return Result::Continue;
+  }
+
+  Result ring_end(const wk_meta_t* meta, uint32_t size) override {
+    // can we trust size?
+    size_t offset = lengths_.empty() ? 0 : lengths_.back();
+    lengths_.push_back(coords_.size() - offset);
     return Result::Continue;
   }
 
@@ -111,6 +118,13 @@ struct ListOfCellWriter : wk::Handler {
     else if (meta->geometry_type == WK_LINESTRING) {
       ArcString arc_string(coords_);
       if (auto err = h3::arcstring_to_cells(arc_string, res_, cells_); err != E_SUCCESS)
+        throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
+    }
+
+    // polygon
+    else if (meta->geometry_type == WK_POLYGON) {
+      CurvedPolygon curved_polygon(coords_, lengths_);
+      if (auto err = h3::curved_polygon_to_cells(curved_polygon, res_, cells_); err != E_SUCCESS)
         throw error("[%i] H3 Error: %s", cur_feat(), h3::fmt_error(err));
     }
 
@@ -140,6 +154,7 @@ private:
   int res_;
   int64_t feat_id_ = -1;
   std::vector<Coord> coords_;
+  std::vector<size_t> lengths_;
   std::unordered_set<uint64_t> cells_;
   vctr<SEXP, ProtectType::ObjectPreserve> result_;
 
