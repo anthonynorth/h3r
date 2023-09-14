@@ -2,6 +2,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <algorithm>
+#include <numeric>
 #include <unordered_set>
 #include <vector>
 #include "h3api.hpp"
@@ -96,7 +97,7 @@ struct ListOfCellWriter : wk::Handler {
 
   Result ring_end(const wk_meta_t* meta, uint32_t size) override {
     // can we trust size?
-    size_t offset = lengths_.empty() ? 0 : lengths_.back();
+    size_t offset = std::accumulate(lengths_.begin(), lengths_.end(), 0UL);
     lengths_.push_back(coords_.size() - offset);
     return Result::Continue;
   }
