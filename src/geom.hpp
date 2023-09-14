@@ -143,7 +143,7 @@ struct CurvedRing : ArcString {
     // spherical winding number derived from
     // http://geomalgorithms.com/a03-_inclusion.html
     int wn = 0;
-    for (const auto& [a, b] : *this) {
+    for (const auto&& [a, b] : *this) {
       if (a.cross(coord).y <= 0) {
         if (b.cross(coord).y > 0 && a.cross(b) * coord > 0) {
           ++wn;

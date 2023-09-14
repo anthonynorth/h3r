@@ -119,10 +119,10 @@ inline H3Error arc_to_cells(const Arc& arc, int res, std::unordered_set<uint64_t
 
   for (uint64_t i = 0; i < n_steps; i++) {
     NVector vec = arc.slerp(i / n_steps);
-    Coord coord = vec.to_coord();
 
     uint64_t cell;
-    if (auto err = latLngToCell(&coord, res, &cell); err != E_SUCCESS) return err;
+    if (auto err = nvector_to_cell(vec, res, &cell); err != E_SUCCESS) return err;
+
     cells.insert(cell);
   }
 
@@ -131,7 +131,7 @@ inline H3Error arc_to_cells(const Arc& arc, int res, std::unordered_set<uint64_t
 
 /// find cells at `res` intersecting `arc_string`
 inline H3Error arcstring_to_cells(const ArcString& arc_string, int res, std::unordered_set<uint64_t>& cells) {
-  for (auto arc : arc_string) {
+  for (const auto& arc : arc_string) {
     if (auto err = arc_to_cells(arc, res, cells); err != E_SUCCESS) return err;
   }
 
@@ -150,7 +150,7 @@ inline H3Error curved_polygon_to_cells(const CurvedPolygon& curved_polygon, int 
   std::unordered_set<uint64_t> edge_cells;
   if (auto err = arcstring_to_cells(curved_polygon.exterior, res, edge_cells); err != E_SUCCESS) return err;
 
-  for (auto interior : curved_polygon.interiors) {
+  for (const auto& interior : curved_polygon.interiors) {
     if (auto err = arcstring_to_cells(interior, res, edge_cells); err != E_SUCCESS) return err;
   }
 
@@ -177,6 +177,8 @@ inline H3Error curved_polygon_to_cells(const CurvedPolygon& curved_polygon, int 
       if (curved_polygon.contains(coord)) {
         interior_cells.push_back(disk_cell);
         cells.insert(disk_cell);
+        // one interior-cell per edge-cell is enough
+        break;
       }
     }
   }
