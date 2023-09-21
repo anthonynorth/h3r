@@ -8,13 +8,16 @@
 /// prevent exceptions from crashing R
 template <typename Fn, typename... Params>
 decltype(auto) catch_unwind(const Fn& fn, Params&&... params) noexcept {
+  const char* msg = nullptr;
+
   try {
     return fn(std::forward<Params>(params)...);
   } catch (const std::exception& err) {
-    Rf_error("%s", err.what());
+    msg = Rf_acopy_string(err.what());
   } catch (...) {
-    Rf_error("%s", "C++ error (unknown cause)");
+    msg = "C++ error (unknown cause)";
   }
 
+  Rf_error("%s", msg);
   bp::unreachable();
 }
